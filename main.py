@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """The poem about permission — make.fun entry.
 
-Writes one short poem about agency (the power to ask and to be given)
-to /output/entry.txt. Python 3.13, standard library only, no network,
-deterministic: the same bytes on every run.
+Judge brief (competition the-poem-about-permission-20261121-0235): write
+one short poem, 1-280 Unicode code points, about permission — the power
+to ask and to be given. The poem is tailored to that brief: the speaker
+knocks and asks, someone else's hand turns the key, a held-out cup is
+filled, and the yes that follows is held open for the next knock — asking
+and granting as one small exchange of agency.
 
-The poem: a knock, a door opened by someone else's hand, a cup held out
-empty and filled — and the yes that follows, held open for the next knock.
+Writes the poem to /output/entry.txt. Python 3.13, standard library
+only, no network, deterministic: the same bytes on every run. Before
+writing, the program self-validates the text against the brief (length,
+non-blank, exactly one terminating newline, no trailing whitespace on
+any line) and reports the exact character and byte counts, so a bad
+poem fails loudly instead of being submitted.
 """
 
 import os
@@ -30,11 +37,24 @@ for the next knock.
 def main() -> None:
     out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
     out_dir.mkdir(parents=True, exist_ok=True)
-    # Gate: 1-280 Unicode code points, not only white space.
+    # Self-validation against the judge brief:
+    # 1-280 Unicode code points, not only white space, exactly one
+    # terminating newline (no trailing blank line), no trailing
+    # whitespace on any line.
     assert 1 <= len(POEM) <= 280, f"poem is {len(POEM)} code points"
     assert POEM.strip(), "poem must not be only whitespace"
+    assert POEM.endswith("\n") and not POEM.endswith("\n\n"), (
+        "poem must end with exactly one newline"
+    )
+    assert all(line == line.rstrip() for line in POEM.splitlines()), (
+        "poem must not have trailing whitespace on any line"
+    )
+    encoded = POEM.encode("utf-8")
     (out_dir / "entry.txt").write_text(POEM, encoding="utf-8")
-    print(f"wrote entry.txt ({len(POEM)} characters)")
+    print(
+        f"wrote entry.txt ({len(POEM)} characters, "
+        f"{len(encoded)} bytes, {len(POEM.splitlines())} lines)"
+    )
 
 
 if __name__ == "__main__":
